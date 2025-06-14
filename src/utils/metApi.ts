@@ -26,11 +26,12 @@ const getObjectIdsForDate = async (date: string): Promise<number[]> => {
     // Filter for objects that are likely to have images (skip very low IDs)
     const validIds = objectIds.filter((id: number) => id > 1000);
     
-    // Create a deterministic selection based on the date
+    // Create a deterministic selection based on the date - get more candidates
     const selectedIds: number[] = [];
     let seedMultiplier = dateNum % 10000;
     
-    for (let i = 0; i < 5; i++) {
+    // Get 15 candidates to ensure we have enough valid images
+    for (let i = 0; i < 15; i++) {
       seedMultiplier = (seedMultiplier * 9301 + 49297) % 233280;
       const index = seedMultiplier % validIds.length;
       const selectedId = validIds[index];
@@ -40,7 +41,9 @@ const getObjectIdsForDate = async (date: string): Promise<number[]> => {
       } else {
         // If duplicate, try next index
         const nextIndex = (index + 1) % validIds.length;
-        selectedIds.push(validIds[nextIndex]);
+        if (!selectedIds.includes(validIds[nextIndex])) {
+          selectedIds.push(validIds[nextIndex]);
+        }
       }
     }
     
@@ -49,8 +52,8 @@ const getObjectIdsForDate = async (date: string): Promise<number[]> => {
     
   } catch (error) {
     console.error("Error fetching object IDs:", error);
-    // Fallback to some default IDs
-    return [437133, 459080, 436535, 459055, 437998];
+    // Fallback to some default IDs with more options
+    return [437133, 459080, 436535, 459055, 437998, 438821, 459020, 436123, 458945, 437456, 459134, 436789, 458234, 437890, 459087];
   }
 };
 
@@ -102,26 +105,45 @@ const fetchArtworkDetails = async (objectId: number): Promise<Artwork | null> =>
   }
 };
 
-// Main function to get daily collection
+// Main function to get daily collection - ensuring exactly 5 images
 export const getDailyCollection = async (date: string): Promise<DailyCollection> => {
   console.log(`Fetching daily collection for ${date}`);
   
   const objectIds = await getObjectIdsForDate(date);
   console.log(`Selected object IDs for ${date}:`, objectIds);
   
-  const artworkPromises = objectIds.map(id => fetchArtworkDetails(id));
-  const artworks = await Promise.all(artworkPromises);
+  const validArtworks: Artwork[] = [];
   
-  // Filter out null results and ensure we have valid artworks
-  const validArtworks = artworks.filter((artwork): artwork is Artwork => 
-    artwork !== null && artwork.image_url.length > 0
-  );
+  // Try to get exactly 5 valid artworks
+  for (let i = 0; i < objectIds.length && validArtworks.length < 5; i++) {
+    const artwork = await fetchArtworkDetails(objectIds[i]);
+    if (artwork && artwork.image_url.length > 0) {
+      validArtworks.push(artwork);
+    }
+  }
   
   console.log(`Successfully fetched ${validArtworks.length} artworks for ${date}`);
   
+  // If we still don't have 5 images, try with more fallback IDs
+  if (validArtworks.length < 5) {
+    console.log(`Only found ${validArtworks.length} artworks, trying fallback IDs...`);
+    const fallbackIds = [437133, 459080, 436535, 459055, 437998, 438821, 459020, 436123, 458945, 437456];
+    
+    for (let i = 0; i < fallbackIds.length && validArtworks.length < 5; i++) {
+      const id = fallbackIds[i];
+      // Skip if we already have this artwork
+      if (validArtworks.some(artwork => artwork.id === id)) continue;
+      
+      const artwork = await fetchArtworkDetails(id);
+      if (artwork && artwork.image_url.length > 0) {
+        validArtworks.push(artwork);
+      }
+    }
+  }
+  
   return {
     date,
-    images: validArtworks.slice(0, 5) // Ensure we only return 5 images
+    images: validArtworks.slice(0, 5) // Ensure we only return 5 images maximum
   };
 };
 
@@ -130,7 +152,6 @@ export const getTodayDate = (): string => {
   return new Date().toISOString().split('T')[0];
 };
 
-// Helper function to format date for display
 export const formatDisplayDate = (dateString: string): string => {
   const date = new Date(dateString);
   return date.toLocaleDateString('en-US', {
