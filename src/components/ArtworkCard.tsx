@@ -1,6 +1,5 @@
-
 import { useState } from "react";
-import { Download } from "lucide-react";
+import { Download, Image } from "lucide-react";
 import { Artwork } from "@/types/artwork";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
