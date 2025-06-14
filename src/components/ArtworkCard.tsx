@@ -14,9 +14,21 @@ const ArtworkCard = ({ artwork, index = 0, onImageClick }: ArtworkCardProps) => 
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [isInView, setIsInView] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+
+  // Check if device is mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768 || 'ontouchstart' in window);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Intersection Observer for lazy loading
   useEffect(() => {
@@ -106,7 +118,9 @@ const ArtworkCard = ({ artwork, index = 0, onImageClick }: ArtworkCardProps) => 
     <div 
       ref={cardRef}
       className={cn(
-        "group relative bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 animate-scale-in cursor-pointer",
+        "group relative bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 animate-scale-in cursor-pointer",
+        // Only apply hover effects on non-mobile devices
+        !isMobile && "hover:shadow-2xl hover:-translate-y-2",
         !imageLoaded && "animate-pulse"
       )}
       style={{ animationDelay: `${index * 0.05}s` }}
@@ -129,7 +143,9 @@ const ArtworkCard = ({ artwork, index = 0, onImageClick }: ArtworkCardProps) => 
             src={artwork.primaryImageSmall || artwork.image_url}
             alt={artwork.title}
             className={cn(
-              "w-full h-full object-cover transition-all duration-500 group-hover:scale-105 relative z-10",
+              "w-full h-full object-cover transition-all duration-500 relative z-10",
+              // Only apply hover scale on non-mobile devices
+              !isMobile && "group-hover:scale-105",
               imageLoaded ? "opacity-100" : "opacity-0"
             )}
             onLoad={handleImageLoad}
@@ -139,13 +155,19 @@ const ArtworkCard = ({ artwork, index = 0, onImageClick }: ArtworkCardProps) => 
           />
         )}
         
-        {/* Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20" />
+        {/* Overlay - only show on hover for non-mobile, always visible on mobile */}
+        <div className={cn(
+          "absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent transition-opacity duration-300 z-20",
+          isMobile ? "opacity-0" : "opacity-0 group-hover:opacity-100"
+        )} />
         
-        {/* Download Button */}
+        {/* Download Button - always visible on mobile, hover on desktop */}
         <button
           onClick={handleDownload}
-          className="absolute top-4 right-4 p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-white hover:scale-110 z-30"
+          className={cn(
+            "absolute top-4 right-4 p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-lg transition-all duration-300 hover:bg-white hover:scale-110 z-30",
+            isMobile ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+          )}
         >
           <Download className="h-5 w-5 text-museum-navy" />
         </button>
