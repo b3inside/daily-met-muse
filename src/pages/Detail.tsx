@@ -51,8 +51,8 @@ const Detail = () => {
             </span>
           </div>
 
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-            <div>
+          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+            <div className="flex-1">
               <h1 className="text-4xl md:text-5xl font-playfair font-bold text-museum-navy mb-4">
                 Daily Collection
               </h1>
@@ -66,12 +66,12 @@ const Detail = () => {
               </p>
             </div>
             
-            <div className="mt-6 md:mt-0">
+            <div className="flex-shrink-0">
               <Link
                 to="/calendar"
-                className="inline-flex items-center space-x-2 bg-museum-navy text-white px-6 py-3 rounded-lg font-inter font-medium hover:bg-museum-gold transition-colors duration-300 shadow-lg hover:shadow-xl"
+                className="inline-flex items-center space-x-2 bg-museum-navy text-white px-4 py-3 rounded-lg font-inter font-medium hover:bg-museum-gold transition-colors duration-300 shadow-lg hover:shadow-xl text-sm whitespace-nowrap"
               >
-                <Calendar className="h-5 w-5" />
+                <Calendar className="h-4 w-4" />
                 <span>Browse Other Days</span>
               </Link>
             </div>
