@@ -1,6 +1,6 @@
 
 import { useState, useRef, useEffect } from "react";
-import { Download, Image } from "lucide-react";
+import { Download, Image as ImageIcon } from "lucide-react";
 import { Artwork } from "@/types/artwork";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -90,7 +90,7 @@ const ArtworkCard = ({ artwork, index = 0 }: ArtworkCardProps) => {
         style={{ animationDelay: `${index * 0.1}s` }}
       >
         <div className="text-gray-400 mb-4">
-          <Image className="h-12 w-12 mx-auto mb-2" />
+          <ImageIcon className="h-12 w-12 mx-auto mb-2" />
           <p className="text-sm">Image unavailable</p>
         </div>
         <h3 className="font-playfair font-semibold text-gray-600 mb-1">
