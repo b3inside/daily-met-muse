@@ -1,15 +1,19 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams, Link } from "react-router-dom";
+import { useState } from "react";
 import Navigation from "@/components/Navigation";
 import ArtworkCard from "@/components/ArtworkCard";
 import LoadingGrid from "@/components/LoadingGrid";
+import Footer from "@/components/Footer";
+import FullScreenImageViewer from "@/components/FullScreenImageViewer";
 import { getDailyCollection, getTodayDate, formatDisplayDate } from "@/utils/metApi";
 import { ArrowDown, Calendar } from "lucide-react";
 
 const Detail = () => {
   const [searchParams] = useSearchParams();
   const dateParam = searchParams.get('date') || getTodayDate();
+  const [fullScreenIndex, setFullScreenIndex] = useState<number | null>(null);
 
   const { data: collection, isLoading, error } = useQuery({
     queryKey: ['daily-collection', dateParam],
@@ -18,11 +22,19 @@ const Detail = () => {
     retry: 2,
   });
 
+  const handleImageClick = (index: number) => {
+    setFullScreenIndex(index);
+  };
+
+  const handleCloseFullScreen = () => {
+    setFullScreenIndex(null);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-museum-cream via-white to-gray-50">
       <Navigation />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header with Breadcrumb */}
         <div className="mb-12 animate-fade-in">
           <div className="flex items-center space-x-2 text-sm font-inter text-gray-600 mb-6">
@@ -49,8 +61,8 @@ const Detail = () => {
               </p>
               <p className="text-gray-600 font-inter max-w-2xl">
                 Ten carefully selected artworks from The Metropolitan Museum of Art, 
-                chosen specifically for this date. Click any artwork to download it 
-                in high resolution for your personal collection.
+                chosen specifically for this date. Click any artwork to view it in full screen 
+                or download it in high resolution for your personal collection.
               </p>
             </div>
             
@@ -92,13 +104,16 @@ const Detail = () => {
         
         {collection && collection.images.length > 0 && (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 auto-rows-fr">
+            {/* Single column layout for large images */}
+            <div className="space-y-8">
               {collection.images.map((artwork, index) => (
-                <ArtworkCard
-                  key={artwork.id}
-                  artwork={artwork}
-                  index={index}
-                />
+                <div key={artwork.id} className="max-w-2xl mx-auto">
+                  <ArtworkCard
+                    artwork={artwork}
+                    index={index}
+                    onImageClick={() => handleImageClick(index)}
+                  />
+                </div>
               ))}
             </div>
 
@@ -163,6 +178,18 @@ const Detail = () => {
           </div>
         )}
       </main>
+
+      <Footer />
+
+      {/* Full Screen Image Viewer */}
+      {collection && fullScreenIndex !== null && (
+        <FullScreenImageViewer
+          artworks={collection.images}
+          currentIndex={fullScreenIndex}
+          isOpen={fullScreenIndex !== null}
+          onClose={handleCloseFullScreen}
+        />
+      )}
     </div>
   );
 };

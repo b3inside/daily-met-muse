@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Download, Image as ImageIcon } from "lucide-react";
 import { Artwork } from "@/types/artwork";
@@ -8,9 +7,10 @@ import { useToast } from "@/hooks/use-toast";
 interface ArtworkCardProps {
   artwork: Artwork;
   index?: number;
+  onImageClick?: () => void;
 }
 
-const ArtworkCard = ({ artwork, index = 0 }: ArtworkCardProps) => {
+const ArtworkCard = ({ artwork, index = 0, onImageClick }: ArtworkCardProps) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [isInView, setIsInView] = useState(false);
@@ -40,7 +40,8 @@ const ArtworkCard = ({ artwork, index = 0 }: ArtworkCardProps) => {
     return () => observer.disconnect();
   }, []);
 
-  const handleDownload = async () => {
+  const handleDownload = async (e: React.MouseEvent) => {
+    e.stopPropagation();
     try {
       const imageUrl = artwork.primaryImage || artwork.image_url;
       const response = await fetch(imageUrl);
@@ -105,10 +106,11 @@ const ArtworkCard = ({ artwork, index = 0 }: ArtworkCardProps) => {
     <div 
       ref={cardRef}
       className={cn(
-        "group relative bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 animate-scale-in",
+        "group relative bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 animate-scale-in cursor-pointer",
         !imageLoaded && "animate-pulse"
       )}
       style={{ animationDelay: `${index * 0.05}s` }}
+      onClick={onImageClick}
     >
       <div className="aspect-[4/5] relative overflow-hidden">
         {/* Loading animation with colorful border */}
@@ -168,6 +170,7 @@ const ArtworkCard = ({ artwork, index = 0 }: ArtworkCardProps) => {
           target="_blank"
           rel="noopener noreferrer"
           className="inline-block mt-3 text-museum-navy hover:text-museum-gold font-inter text-sm font-medium transition-colors duration-200"
+          onClick={(e) => e.stopPropagation()}
         >
           View at Met Museum →
         </a>

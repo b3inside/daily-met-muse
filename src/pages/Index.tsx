@@ -1,14 +1,18 @@
 
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import Navigation from "@/components/Navigation";
 import ArtworkCard from "@/components/ArtworkCard";
 import LoadingGrid from "@/components/LoadingGrid";
+import Footer from "@/components/Footer";
+import FullScreenImageViewer from "@/components/FullScreenImageViewer";
 import { getDailyCollection, getTodayDate, formatDisplayDate } from "@/utils/metApi";
 import { Link } from "react-router-dom";
 import { Calendar } from "lucide-react";
 
 const Index = () => {
   const today = getTodayDate();
+  const [fullScreenIndex, setFullScreenIndex] = useState<number | null>(null);
   
   const { data: collection, isLoading, error } = useQuery({
     queryKey: ['daily-collection', today],
@@ -16,6 +20,14 @@ const Index = () => {
     staleTime: 1000 * 60 * 60, // 1 hour
     retry: 2,
   });
+
+  const handleImageClick = (index: number) => {
+    setFullScreenIndex(index);
+  };
+
+  const handleCloseFullScreen = () => {
+    setFullScreenIndex(null);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-museum-cream via-white to-gray-50">
@@ -69,6 +81,7 @@ const Index = () => {
                 key={artwork.id}
                 artwork={artwork}
                 index={index}
+                onImageClick={() => handleImageClick(index)}
               />
             ))}
           </div>
@@ -104,6 +117,18 @@ const Index = () => {
           </a>
         </div>
       </main>
+
+      <Footer />
+
+      {/* Full Screen Image Viewer */}
+      {collection && fullScreenIndex !== null && (
+        <FullScreenImageViewer
+          artworks={collection.images}
+          currentIndex={fullScreenIndex}
+          isOpen={fullScreenIndex !== null}
+          onClose={handleCloseFullScreen}
+        />
+      )}
     </div>
   );
 };
