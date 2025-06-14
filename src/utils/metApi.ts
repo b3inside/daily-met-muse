@@ -26,12 +26,12 @@ const getObjectIdsForDate = async (date: string): Promise<number[]> => {
     // Filter for objects that are likely to have images (skip very low IDs)
     const validIds = objectIds.filter((id: number) => id > 1000);
     
-    // Create a deterministic selection based on the date - get more candidates
+    // Create a deterministic selection based on the date - get more candidates for 10 images
     const selectedIds: number[] = [];
     let seedMultiplier = dateNum % 10000;
     
-    // Get 15 candidates to ensure we have enough valid images
-    for (let i = 0; i < 15; i++) {
+    // Get 25 candidates to ensure we have enough valid images for 10 final images
+    for (let i = 0; i < 25; i++) {
       seedMultiplier = (seedMultiplier * 9301 + 49297) % 233280;
       const index = seedMultiplier % validIds.length;
       const selectedId = validIds[index];
@@ -52,12 +52,12 @@ const getObjectIdsForDate = async (date: string): Promise<number[]> => {
     
   } catch (error) {
     console.error("Error fetching object IDs:", error);
-    // Fallback to some default IDs with more options
-    return [437133, 459080, 436535, 459055, 437998, 438821, 459020, 436123, 458945, 437456, 459134, 436789, 458234, 437890, 459087];
+    // Fallback to more default IDs for 10 images
+    return [437133, 459080, 436535, 459055, 437998, 438821, 459020, 436123, 458945, 437456, 459134, 436789, 458234, 437890, 459087, 458912, 437234, 459156, 436987, 458723, 437612, 459034, 436445, 458867, 437789];
   }
 };
 
-// Function to fetch artwork details
+// Function to fetch artwork details with image preloading
 const fetchArtworkDetails = async (objectId: number): Promise<Artwork | null> => {
   const cacheKey = `artwork-${objectId}`;
   
@@ -96,6 +96,12 @@ const fetchArtworkDetails = async (objectId: number): Promise<Artwork | null> =>
       dimensions: data.dimensions
     };
     
+    // Preload the small image for faster display
+    if (artwork.primaryImageSmall) {
+      const img = new Image();
+      img.src = artwork.primaryImageSmall;
+    }
+    
     cache.set(cacheKey, artwork);
     return artwork;
     
@@ -105,7 +111,7 @@ const fetchArtworkDetails = async (objectId: number): Promise<Artwork | null> =>
   }
 };
 
-// Main function to get daily collection - ensuring exactly 5 images
+// Main function to get daily collection - ensuring exactly 10 images
 export const getDailyCollection = async (date: string): Promise<DailyCollection> => {
   console.log(`Fetching daily collection for ${date}`);
   
@@ -114,8 +120,8 @@ export const getDailyCollection = async (date: string): Promise<DailyCollection>
   
   const validArtworks: Artwork[] = [];
   
-  // Try to get exactly 5 valid artworks
-  for (let i = 0; i < objectIds.length && validArtworks.length < 5; i++) {
+  // Try to get exactly 10 valid artworks
+  for (let i = 0; i < objectIds.length && validArtworks.length < 10; i++) {
     const artwork = await fetchArtworkDetails(objectIds[i]);
     if (artwork && artwork.image_url.length > 0) {
       validArtworks.push(artwork);
@@ -124,12 +130,12 @@ export const getDailyCollection = async (date: string): Promise<DailyCollection>
   
   console.log(`Successfully fetched ${validArtworks.length} artworks for ${date}`);
   
-  // If we still don't have 5 images, try with more fallback IDs
-  if (validArtworks.length < 5) {
+  // If we still don't have 10 images, try with more fallback IDs
+  if (validArtworks.length < 10) {
     console.log(`Only found ${validArtworks.length} artworks, trying fallback IDs...`);
-    const fallbackIds = [437133, 459080, 436535, 459055, 437998, 438821, 459020, 436123, 458945, 437456];
+    const fallbackIds = [437133, 459080, 436535, 459055, 437998, 438821, 459020, 436123, 458945, 437456, 459134, 436789, 458234, 437890, 459087, 458912, 437234, 459156, 436987, 458723];
     
-    for (let i = 0; i < fallbackIds.length && validArtworks.length < 5; i++) {
+    for (let i = 0; i < fallbackIds.length && validArtworks.length < 10; i++) {
       const id = fallbackIds[i];
       // Skip if we already have this artwork
       if (validArtworks.some(artwork => artwork.id === id)) continue;
@@ -143,11 +149,10 @@ export const getDailyCollection = async (date: string): Promise<DailyCollection>
   
   return {
     date,
-    images: validArtworks.slice(0, 5) // Ensure we only return 5 images maximum
+    images: validArtworks.slice(0, 10) // Ensure we only return 10 images maximum
   };
 };
 
-// Helper function to get today's date in YYYY-MM-DD format
 export const getTodayDate = (): string => {
   return new Date().toISOString().split('T')[0];
 };

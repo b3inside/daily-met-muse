@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useRef, useEffect } from "react";
 import { Download, Image } from "lucide-react";
 import { Artwork } from "@/types/artwork";
 import { cn } from "@/lib/utils";
@@ -12,7 +13,32 @@ interface ArtworkCardProps {
 const ArtworkCard = ({ artwork, index = 0 }: ArtworkCardProps) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [isInView, setIsInView] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+
+  // Intersection Observer for lazy loading
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsInView(true);
+          observer.disconnect();
+        }
+      },
+      {
+        rootMargin: '50px',
+        threshold: 0.1
+      }
+    );
+
+    if (cardRef.current) {
+      observer.observe(cardRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
 
   const handleDownload = async () => {
     try {
@@ -47,9 +73,19 @@ const ArtworkCard = ({ artwork, index = 0 }: ArtworkCardProps) => {
     console.error(`Failed to load image for artwork ${artwork.id}: ${artwork.image_url}`);
   };
 
+  const handleImageLoad = () => {
+    setImageLoaded(true);
+    // Prefetch the high-res image for faster download
+    if (artwork.primaryImage && artwork.primaryImage !== artwork.primaryImageSmall) {
+      const highResImg = new Image();
+      highResImg.src = artwork.primaryImage;
+    }
+  };
+
   if (imageError) {
     return (
       <div 
+        ref={cardRef}
         className="bg-gray-100 rounded-lg p-6 text-center animate-fade-in"
         style={{ animationDelay: `${index * 0.1}s` }}
       >
@@ -67,23 +103,29 @@ const ArtworkCard = ({ artwork, index = 0 }: ArtworkCardProps) => {
 
   return (
     <div 
+      ref={cardRef}
       className={cn(
         "group relative bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 animate-scale-in",
         !imageLoaded && "animate-pulse"
       )}
-      style={{ animationDelay: `${index * 0.1}s` }}
+      style={{ animationDelay: `${index * 0.05}s` }}
     >
       <div className="aspect-[4/5] relative overflow-hidden">
-        <img
-          src={artwork.primaryImageSmall || artwork.image_url}
-          alt={artwork.title}
-          className={cn(
-            "w-full h-full object-cover transition-all duration-500 group-hover:scale-105",
-            imageLoaded ? "opacity-100" : "opacity-0"
-          )}
-          onLoad={() => setImageLoaded(true)}
-          onError={handleImageError}
-        />
+        {isInView && (
+          <img
+            ref={imgRef}
+            src={artwork.primaryImageSmall || artwork.image_url}
+            alt={artwork.title}
+            className={cn(
+              "w-full h-full object-cover transition-all duration-500 group-hover:scale-105",
+              imageLoaded ? "opacity-100" : "opacity-0"
+            )}
+            onLoad={handleImageLoad}
+            onError={handleImageError}
+            loading="lazy"
+            decoding="async"
+          />
+        )}
         
         {!imageLoaded && (
           <div className="absolute inset-0 bg-gradient-to-br from-gray-200 to-gray-300 animate-pulse" />

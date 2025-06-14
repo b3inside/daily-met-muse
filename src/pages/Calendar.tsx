@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -143,7 +142,7 @@ const Calendar = () => {
             {selectedCollection && (
               <div className="bg-white rounded-xl shadow-lg p-8 animate-scale-in">
                 {selectedCollection.images.length > 0 ? (
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                     {selectedCollection.images.map((artwork, index) => (
                       <div
                         key={artwork.id}
@@ -153,10 +152,11 @@ const Calendar = () => {
                           src={artwork.primaryImageSmall || artwork.image_url}
                           alt={artwork.title}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          loading="lazy"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                         <div className="absolute bottom-2 left-2 right-2 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                          <p className="text-sm font-inter font-medium truncate">
+                          <p className="text-xs font-inter font-medium truncate">
                             {artwork.title}
                           </p>
                           <p className="text-xs text-gray-200 truncate">
