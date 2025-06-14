@@ -1,9 +1,8 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import Navigation from "@/components/Navigation";
-import { getDailyCollection, getTodayDate, formatDisplayDate } from "@/utils/metApi";
+import { getDailyCollection, getTodayDate, formatDisplayDate, isFutureDate } from "@/utils/metApi";
 import { cn } from "@/lib/utils";
 import { ArrowDown, Image, ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -27,8 +26,8 @@ const Calendar = () => {
   const { data: selectedCollection, isLoading } = useQuery({
     queryKey: ['daily-collection', selectedDate],
     queryFn: () => getDailyCollection(selectedDate),
-    enabled: !!selectedDate,
-    staleTime: 1000 * 60 * 60, // 1 hour
+    enabled: !!selectedDate && !isFutureDate(selectedDate),
+    staleTime: 1000 * 60 * 60 * 24, // 24 hours - longer since we have better caching
   });
 
   // Calendar generation functions
@@ -61,7 +60,8 @@ const Calendar = () => {
         day,
         dateString,
         isToday: dateString === today,
-        isSelected: dateString === selectedDate
+        isSelected: dateString === selectedDate,
+        isFuture: isFutureDate(dateString)
       });
     }
 
@@ -81,6 +81,10 @@ const Calendar = () => {
   };
 
   const handleDateSelect = (dateString: string) => {
+    // Don't allow selection of future dates
+    if (isFutureDate(dateString)) {
+      return;
+    }
     setSelectedDate(dateString);
   };
 
@@ -142,13 +146,16 @@ const Calendar = () => {
                     {dayData ? (
                       <button
                         onClick={() => handleDateSelect(dayData.dateString)}
+                        disabled={dayData.isFuture}
                         className={cn(
-                          "w-full h-full rounded-lg text-sm font-inter font-medium transition-all duration-200 hover:scale-105",
-                          dayData.isSelected
-                            ? "bg-museum-navy text-white shadow-lg"
+                          "w-full h-full rounded-lg text-sm font-inter font-medium transition-all duration-200",
+                          dayData.isFuture
+                            ? "bg-gray-100 text-gray-300 cursor-not-allowed"
+                            : dayData.isSelected
+                            ? "bg-museum-navy text-white shadow-lg hover:scale-105"
                             : dayData.isToday
-                            ? "bg-museum-gold text-white shadow-md"
-                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                            ? "bg-museum-gold text-white shadow-md hover:scale-105"
+                            : "bg-gray-50 text-gray-700 hover:bg-gray-100 hover:scale-105"
                         )}
                       >
                         {dayData.day}
@@ -169,6 +176,10 @@ const Calendar = () => {
                   <div className="w-4 h-4 bg-museum-navy rounded-full"></div>
                   <span className="text-gray-600">Selected Date</span>
                 </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4 bg-gray-100 border border-gray-300 rounded-full"></div>
+                  <span className="text-gray-400">Future (Unavailable)</span>
+                </div>
               </div>
             </div>
           </div>
@@ -179,16 +190,32 @@ const Calendar = () => {
               <h2 className="text-2xl font-playfair font-semibold text-museum-navy">
                 {formatDisplayDate(selectedDate)}
               </h2>
-              <Link
-                to={`/detail?date=${selectedDate}`}
-                className="inline-flex items-center space-x-2 bg-museum-navy text-white px-4 py-2 rounded-lg font-inter font-medium hover:bg-museum-gold transition-colors duration-300"
-              >
-                <span>View Details</span>
-                <ArrowDown className="h-4 w-4 rotate-[-90deg]" />
-              </Link>
+              {!isFutureDate(selectedDate) && (
+                <Link
+                  to={`/detail?date=${selectedDate}`}
+                  className="inline-flex items-center space-x-2 bg-museum-navy text-white px-4 py-2 rounded-lg font-inter font-medium hover:bg-museum-gold transition-colors duration-300"
+                >
+                  <span>View Details</span>
+                  <ArrowDown className="h-4 w-4 rotate-[-90deg]" />
+                </Link>
+              )}
             </div>
 
-            {isLoading && (
+            {isFutureDate(selectedDate) && (
+              <div className="bg-white rounded-xl shadow-lg p-8">
+                <div className="text-center py-12">
+                  <Image className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-playfair font-semibold text-gray-600 mb-2">
+                    Future Date Selected
+                  </h3>
+                  <p className="text-gray-500 font-inter">
+                    Art collections are only available for today and past dates. Please select a different date.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {!isFutureDate(selectedDate) && isLoading && (
               <div className="bg-white rounded-xl shadow-lg p-8">
                 <div className="animate-pulse space-y-4">
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -200,7 +227,7 @@ const Calendar = () => {
               </div>
             )}
 
-            {selectedCollection && (
+            {!isFutureDate(selectedDate) && selectedCollection && (
               <div className="bg-white rounded-xl shadow-lg p-8 animate-scale-in">
                 {selectedCollection.images.length > 0 ? (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
