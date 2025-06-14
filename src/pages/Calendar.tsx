@@ -1,7 +1,9 @@
+
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import Navigation from "@/components/Navigation";
+import Footer from "@/components/Footer";
 import { getDailyCollection, getTodayDate, formatDisplayDate, isFutureDate } from "@/utils/metApi";
 import { cn } from "@/lib/utils";
 import { ArrowDown, Image, ChevronLeft, ChevronRight } from "lucide-react";
@@ -270,6 +272,8 @@ const Calendar = () => {
           </div>
         </div>
       </main>
+      
+      <Footer />
     </div>
   );
 };
