@@ -1,30 +1,28 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import { getDailyCollection, getTodayDate, formatDisplayDate } from "@/utils/metApi";
 import { cn } from "@/lib/utils";
-import { ArrowDown, Image } from "lucide-react";
+import { ArrowDown, Image, ChevronLeft, ChevronRight } from "lucide-react";
 
 const Calendar = () => {
-  const today = getTodayDate();
-  const [selectedDate, setSelectedDate] = useState(today);
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(getTodayDate());
 
-  // Generate date range (last 30 days)
-  const generateDateRange = () => {
-    const dates = [];
-    const currentDate = new Date();
-    
-    for (let i = 0; i < 30; i++) {
-      const date = new Date(currentDate);
-      date.setDate(date.getDate() - i);
-      dates.push(date.toISOString().split('T')[0]);
-    }
-    
-    return dates.reverse();
-  };
-
-  const dateRange = generateDateRange();
+  // Get user's timezone
+  const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  
+  // Get current date in user's timezone
+  const today = new Date().toLocaleDateString('sv-SE'); // YYYY-MM-DD format
+  
+  useEffect(() => {
+    // Set current date to user's timezone
+    const now = new Date();
+    setCurrentDate(now);
+    setSelectedDate(today);
+  }, [today]);
 
   const { data: selectedCollection, isLoading } = useQuery({
     queryKey: ['daily-collection', selectedDate],
@@ -33,16 +31,57 @@ const Calendar = () => {
     staleTime: 1000 * 60 * 60, // 1 hour
   });
 
-  const getDayOfWeek = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', { weekday: 'short' });
+  // Calendar generation functions
+  const getDaysInMonth = (date: Date) => {
+    return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
   };
 
-  const getDateNumber = (dateString: string) => {
-    return new Date(dateString).getDate();
+  const getFirstDayOfMonth = (date: Date) => {
+    return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
   };
 
-  const isToday = (dateString: string) => {
-    return dateString === today;
+  const getMonthName = (date: Date) => {
+    return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  };
+
+  const generateCalendarDays = () => {
+    const daysInMonth = getDaysInMonth(currentDate);
+    const firstDay = getFirstDayOfMonth(currentDate);
+    const days = [];
+
+    // Add empty cells for days before the first day of the month
+    for (let i = 0; i < firstDay; i++) {
+      days.push(null);
+    }
+
+    // Add days of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateString = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      days.push({
+        day,
+        dateString,
+        isToday: dateString === today,
+        isSelected: dateString === selectedDate
+      });
+    }
+
+    return days;
+  };
+
+  const navigateMonth = (direction: 'prev' | 'next') => {
+    setCurrentDate(prev => {
+      const newDate = new Date(prev);
+      if (direction === 'prev') {
+        newDate.setMonth(newDate.getMonth() - 1);
+      } else {
+        newDate.setMonth(newDate.getMonth() + 1);
+      }
+      return newDate;
+    });
+  };
+
+  const handleDateSelect = (dateString: string) => {
+    setSelectedDate(dateString);
   };
 
   return (
@@ -56,19 +95,39 @@ const Calendar = () => {
             Art Calendar
           </h1>
           <p className="text-xl text-gray-600 font-inter max-w-2xl mx-auto">
-            Browse through our daily art collections. Each day features five unique pieces 
+            Browse through our daily art collections. Each day features ten unique pieces 
             from The Metropolitan Museum of Art's extensive catalog.
+          </p>
+          <p className="text-sm text-gray-500 font-inter mt-2">
+            Timezone: {userTimeZone}
           </p>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-12">
           {/* Calendar Grid */}
           <div className="lg:col-span-1">
-            <h2 className="text-2xl font-playfair font-semibold text-museum-navy mb-6">
-              Select a Date
-            </h2>
             <div className="bg-white rounded-xl shadow-lg p-6">
-              <div className="grid grid-cols-7 gap-2 mb-4">
+              {/* Calendar Header */}
+              <div className="flex items-center justify-between mb-6">
+                <button
+                  onClick={() => navigateMonth('prev')}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <ChevronLeft className="h-5 w-5 text-gray-600" />
+                </button>
+                <h2 className="text-xl font-playfair font-semibold text-museum-navy">
+                  {getMonthName(currentDate)}
+                </h2>
+                <button
+                  onClick={() => navigateMonth('next')}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <ChevronRight className="h-5 w-5 text-gray-600" />
+                </button>
+              </div>
+
+              {/* Day Headers */}
+              <div className="grid grid-cols-7 gap-1 mb-2">
                 {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
                   <div key={day} className="text-center text-sm font-inter font-medium text-gray-500 py-2">
                     {day}
@@ -76,27 +135,29 @@ const Calendar = () => {
                 ))}
               </div>
               
-              <div className="grid grid-cols-7 gap-2">
-                {dateRange.map(date => {
-                  const dayOfWeek = new Date(date).getDay();
-                  
-                  return (
-                    <button
-                      key={date}
-                      onClick={() => setSelectedDate(date)}
-                      className={cn(
-                        "aspect-square rounded-lg text-sm font-inter font-medium transition-all duration-200 hover:scale-105",
-                        selectedDate === date
-                          ? "bg-museum-navy text-white shadow-lg"
-                          : isToday(date)
-                          ? "bg-museum-gold text-white shadow-md"
-                          : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                      )}
-                    >
-                      {getDateNumber(date)}
-                    </button>
-                  );
-                })}
+              {/* Calendar Days */}
+              <div className="grid grid-cols-7 gap-1">
+                {generateCalendarDays().map((dayData, index) => (
+                  <div key={index} className="aspect-square">
+                    {dayData ? (
+                      <button
+                        onClick={() => handleDateSelect(dayData.dateString)}
+                        className={cn(
+                          "w-full h-full rounded-lg text-sm font-inter font-medium transition-all duration-200 hover:scale-105",
+                          dayData.isSelected
+                            ? "bg-museum-navy text-white shadow-lg"
+                            : dayData.isToday
+                            ? "bg-museum-gold text-white shadow-md"
+                            : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                        )}
+                      >
+                        {dayData.day}
+                      </button>
+                    ) : (
+                      <div className="w-full h-full"></div>
+                    )}
+                  </div>
+                ))}
               </div>
               
               <div className="mt-6 space-y-2 text-sm font-inter">

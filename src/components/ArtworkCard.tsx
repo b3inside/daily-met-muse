@@ -111,13 +111,23 @@ const ArtworkCard = ({ artwork, index = 0 }: ArtworkCardProps) => {
       style={{ animationDelay: `${index * 0.05}s` }}
     >
       <div className="aspect-[4/5] relative overflow-hidden">
+        {/* Loading animation with colorful border */}
+        {isInView && !imageLoaded && (
+          <div className="absolute inset-0 rounded-t-xl">
+            <div className="absolute inset-0 bg-gradient-to-br from-gray-200 to-gray-300" />
+            <div className="absolute inset-0 rounded-t-xl border-4 border-transparent bg-gradient-to-r from-blue-500 via-purple-500 via-pink-500 via-red-500 via-yellow-500 via-green-500 to-blue-500 bg-clip-border animate-spin-slow">
+              <div className="w-full h-full bg-gray-200 rounded-t-lg"></div>
+            </div>
+          </div>
+        )}
+        
         {isInView && (
           <img
             ref={imgRef}
             src={artwork.primaryImageSmall || artwork.image_url}
             alt={artwork.title}
             className={cn(
-              "w-full h-full object-cover transition-all duration-500 group-hover:scale-105",
+              "w-full h-full object-cover transition-all duration-500 group-hover:scale-105 relative z-10",
               imageLoaded ? "opacity-100" : "opacity-0"
             )}
             onLoad={handleImageLoad}
@@ -127,17 +137,13 @@ const ArtworkCard = ({ artwork, index = 0 }: ArtworkCardProps) => {
           />
         )}
         
-        {!imageLoaded && (
-          <div className="absolute inset-0 bg-gradient-to-br from-gray-200 to-gray-300 animate-pulse" />
-        )}
-        
         {/* Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20" />
         
         {/* Download Button */}
         <button
           onClick={handleDownload}
-          className="absolute top-4 right-4 p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-white hover:scale-110"
+          className="absolute top-4 right-4 p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-white hover:scale-110 z-30"
         >
           <Download className="h-5 w-5 text-museum-navy" />
         </button>
