@@ -1,6 +1,6 @@
 
 import { Link, useLocation } from "react-router-dom";
-import { Calendar, Image } from "lucide-react";
+import { Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const Navigation = () => {
@@ -10,16 +10,20 @@ const Navigation = () => {
     <nav className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
-          <Link to="/" className="flex items-center space-x-2 group">
-            <div className="p-2 bg-museum-navy rounded-lg group-hover:bg-museum-gold transition-colors duration-300">
-              <Image className="h-6 w-6 text-white" />
+          <Link to="/" className="flex items-center space-x-3 group">
+            <div className="w-12 h-12 rounded-lg overflow-hidden group-hover:scale-105 transition-transform duration-300">
+              <img 
+                src="/lovable-uploads/f364370a-da7b-4eac-942b-2fc26bcc90ac.png" 
+                alt="Museum Collection Logo" 
+                className="w-full h-full object-cover"
+              />
             </div>
             <div>
               <h1 className="text-xl font-playfair font-bold text-museum-navy">
-                Daily Art
+                Museum Collection
               </h1>
               <p className="text-xs text-gray-600 font-inter">
-                Metropolitan Museum Collection
+                Daily Art
               </p>
             </div>
           </Link>
