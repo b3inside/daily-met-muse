@@ -3,6 +3,9 @@ import { MetApiObject, Artwork, DailyCollection } from "@/types/artwork";
 
 const MET_API_BASE = "https://collectionapi.metmuseum.org/public/collection/v1";
 
+const getDateSeed = (date: string) => Math.floor(Date.parse(date) / 86_400_000);
+const advanceSeed = (seed: number) => (Math.imul(seed, 1103515245) + 12345) & 0x7fffffff;
+
 // Enhanced cache with localStorage persistence
 const CACHE_KEY_PREFIX = "museum_cache_";
 const CACHE_EXPIRY_DAYS = 7; // Cache expires after 7 days
@@ -66,7 +69,6 @@ const getObjectIdsForDate = async (date: string): Promise<number[]> => {
     const data = await response.json();
     
     // Use date as seed for deterministic selection
-    const dateNum = new Date(date).getTime();
     const objectIds = data.objectIDs || [];
     
     // Filter for objects that are likely to have images
@@ -74,12 +76,12 @@ const getObjectIdsForDate = async (date: string): Promise<number[]> => {
     
     // Create a truly deterministic selection based on the date
     const selectedIds: number[] = [];
-    let seed = dateNum % 100000;
+    let seed = getDateSeed(date);
     
     // Generate exactly 25 candidate IDs deterministically
     for (let i = 0; i < 25; i++) {
       // Linear congruential generator for deterministic pseudo-random numbers
-      seed = (seed * 1103515245 + 12345) % 2147483647;
+      seed = advanceSeed(seed);
       const index = Math.abs(seed) % validIds.length;
       const selectedId = validIds[index];
       
@@ -95,14 +97,13 @@ const getObjectIdsForDate = async (date: string): Promise<number[]> => {
   } catch (error) {
     console.error("Error fetching object IDs:", error);
     // Deterministic fallback based on date
-    const dateNum = new Date(date).getTime();
     const baseIds = [437133, 459080, 436535, 459055, 437998, 438821, 459020, 436123, 458945, 437456, 459134, 436789, 458234, 437890, 459087, 458912, 437234, 459156, 436987, 458723, 437612, 459034, 436445, 458867, 437789];
     
     // Shuffle deterministically based on date
-    let seed = dateNum % 100000;
+    let seed = getDateSeed(date);
     const shuffled = [...baseIds];
     for (let i = shuffled.length - 1; i > 0; i--) {
-      seed = (seed * 1103515245 + 12345) % 2147483647;
+      seed = advanceSeed(seed);
       const j = Math.abs(seed) % (i + 1);
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
@@ -197,13 +198,12 @@ export const getDailyCollection = async (date: string): Promise<DailyCollection>
   // If we still don't have 10 images, try with more deterministic fallback IDs
   if (validArtworks.length < 10) {
     console.log(`Only found ${validArtworks.length} artworks, trying fallback IDs...`);
-    const dateNum = new Date(date).getTime();
     const fallbackIds = [437133, 459080, 436535, 459055, 437998, 438821, 459020, 436123, 458945, 437456, 459134, 436789, 458234, 437890, 459087, 458912, 437234, 459156, 436987, 458723];
     
     // Make fallback selection deterministic too
-    let seed = dateNum % 100000;
+    let seed = getDateSeed(date);
     for (let i = 0; i < fallbackIds.length && validArtworks.length < 10; i++) {
-      seed = (seed * 1103515245 + 12345) % 2147483647;
+      seed = advanceSeed(seed);
       const index = Math.abs(seed) % fallbackIds.length;
       const id = fallbackIds[index];
       

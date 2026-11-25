@@ -13,7 +13,7 @@ const Navigation = () => {
           <Link to="/" className="flex items-center space-x-2 sm:space-x-3 group">
             <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-lg overflow-hidden group-hover:scale-105 transition-transform duration-300 flex-shrink-0">
               <img 
-                src="/lovable-uploads/f364370a-da7b-4eac-942b-2fc26bcc90ac.png" 
+                src={import.meta.env.BASE_URL + "lovable-uploads/f364370a-da7b-4eac-942b-2fc26bcc90ac.png"}
                 alt="Museum Collection Logo" 
                 className="w-full h-full object-cover"
               />
