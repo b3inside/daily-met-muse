@@ -1,73 +1,22 @@
-# Welcome to your Lovable project
+# Daily Met Muse
 
-## Project info
+每天看十件大都会艺术博物馆的藏品，也可以按日历回看。<br>
+Discover ten works from The Met each day and revisit past selections by date.
 
-**URL**: https://lovable.dev/projects/ea5419b2-ee14-43ab-a8f5-819fb39f7892
+## 本地运行 · Run locally
 
-## How can I edit this code?
-
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/ea5419b2-ee14-43ab-a8f5-819fb39f7892) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+需要 Node.js 和 npm，已用 Node.js 22 验证。<br>
+Requires Node.js and npm. Tested with Node.js 22.
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+git clone https://github.com/b3inside/daily-met-muse.git
+cd daily-met-muse
+npm ci
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+打开终端显示的本地地址，默认是 `http://localhost:8080`。<br>
+Open the local URL printed in your terminal. The default is `http://localhost:8080`.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/ea5419b2-ee14-43ab-a8f5-819fb39f7892) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+馆藏数据需要联网加载。<br>
+An internet connection is required to load the artwork. [The Met Collection API](https://metmuseum.github.io/)
